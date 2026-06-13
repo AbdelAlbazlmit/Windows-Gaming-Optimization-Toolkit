@@ -3,7 +3,7 @@ Requires -RunAsAdministrator
 $ScriptDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 . "$ScriptDir\Utils\Logging-Functions.ps1"
 
-Write-Host "`n[►] Quick Access Shortcuts" -ForegroundColor Cyan
+Write-Host "`n[>] Quick Access Shortcuts" -ForegroundColor Cyan
 Write-Host "[1] Task Manager"
 Write-Host "[2] System Information"
 Write-Host "[3] Device Manager"
@@ -24,4 +24,4 @@ switch ($choice) {
     "7" { regedit.exe }
     "8" { diskmgmt.msc }
 }
-Read-Host "Press Enter"
+Read-Host "Press Enter to continue"

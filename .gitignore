@@ -1,0 +1,12 @@
+*.log
+Logs/
+Backups/
+*.bak
+*.reg
+.DS_Store
+Thumbs.db
+.vscode/
+*.code-workspace
+test/
+local/
+*.tmp

@@ -3,11 +3,19 @@
 
 if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
     Write-Host "[ERROR] This script requires Administrator privileges" -ForegroundColor Red
+    Read-Host "Press Enter to exit"
     exit 1
 }
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-. "$ScriptDir\Utils\Logging-Functions.ps1"
+$ErrorActionPreference = "SilentlyContinue"
+
+# Simple logging function
+function Log-Message {
+    param([string]$Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Add-Content -Path "$env:TEMP\toolkit.log" -Value "[$timestamp] $Message" -Force
+}
 
 function Show-MainMenu {
     Clear-Host
@@ -61,27 +69,71 @@ function Run-Script {
     if (Test-Path $ScriptPath) {
         Write-Host ""
         Write-Host "[>] Running: $Name" -ForegroundColor Cyan
-        & $ScriptPath
+        Write-Host "=====================================================" -ForegroundColor Cyan
+        
+        try {
+            $result = & $ScriptPath 2>&1
+            Write-Host $result
+            Log-Message "Completed: $Name"
+        }
+        catch {
+            Write-Host "[ERROR] Failed to run $Name : $_" -ForegroundColor Red
+            Log-Message "ERROR: Failed to run $Name - $_"
+        }
+        
+        Write-Host ""
+        Write-Host "=====================================================" -ForegroundColor Cyan
+        Read-Host "Press Enter to return to menu"
     } else {
         Write-Host "[ERROR] Script not found: $ScriptPath" -ForegroundColor Red
+        Log-Message "ERROR: Script not found - $ScriptPath"
+        Read-Host "Press Enter to return to menu"
     }
 }
 
-do {
+# Main menu loop
+$continueLoop = $true
+while ($continueLoop) {
     Show-MainMenu
     $choice = Read-Host "`nSelect option"
     
     switch ($choice) {
-        "0" { exit 0 }
+        "0" { 
+            Write-Host "[>] Exiting toolkit..." -ForegroundColor Yellow
+            Log-Message "Toolkit exited by user"
+            $continueLoop = $false
+            exit 0
+        }
         "1" { 
-            Write-Host "[>] Running Gaming Profile..." -ForegroundColor Cyan
-            & "$ScriptDir\Tools\Restore-Point-Manager.ps1"
-            & "$ScriptDir\Core\1-Telemetry-Removal.ps1"
-            & "$ScriptDir\Core\2-Service-Disabler.ps1"
-            & "$ScriptDir\Core\3-Power-Optimization.ps1"
-            & "$ScriptDir\Core\4-Network-Optimization.ps1"
-            & "$ScriptDir\Core\5-Disk-Optimization.ps1"
-            & "$ScriptDir\Tools\Disk-Cleanup.ps1"
+            Write-Host "[>] Starting Gaming Profile..." -ForegroundColor Cyan
+            Log-Message "Gaming Profile started"
+            
+            if (Test-Path "$ScriptDir\Tools\Restore-Point-Manager.ps1") {
+                & "$ScriptDir\Tools\Restore-Point-Manager.ps1" 2>&1 | Out-Null
+            }
+            if (Test-Path "$ScriptDir\Core\1-Telemetry-Removal.ps1") {
+                & "$ScriptDir\Core\1-Telemetry-Removal.ps1" 2>&1 | Out-Null
+            }
+            if (Test-Path "$ScriptDir\Core\2-Service-Disabler.ps1") {
+                & "$ScriptDir\Core\2-Service-Disabler.ps1" 2>&1 | Out-Null
+            }
+            if (Test-Path "$ScriptDir\Core\3-Power-Optimization.ps1") {
+                & "$ScriptDir\Core\3-Power-Optimization.ps1" 2>&1 | Out-Null
+            }
+            if (Test-Path "$ScriptDir\Core\4-Network-Optimization.ps1") {
+                & "$ScriptDir\Core\4-Network-Optimization.ps1" 2>&1 | Out-Null
+            }
+            if (Test-Path "$ScriptDir\Core\5-Disk-Optimization.ps1") {
+                & "$ScriptDir\Core\5-Disk-Optimization.ps1" 2>&1 | Out-Null
+            }
+            if (Test-Path "$ScriptDir\Tools\Disk-Cleanup.ps1") {
+                & "$ScriptDir\Tools\Disk-Cleanup.ps1" 2>&1 | Out-Null
+            }
+            
+            Write-Host ""
+            Write-Host "[CHECK] Gaming Profile completed!" -ForegroundColor Green
+            Log-Message "Gaming Profile completed successfully"
+            Read-Host "Press Enter to return to menu"
         }
         "4" { Run-Script "$ScriptDir\Core\1-Telemetry-Removal.ps1" "Telemetry Removal" }
         "5" { Run-Script "$ScriptDir\Core\2-Service-Disabler.ps1" "Service Disabler" }
@@ -100,8 +152,9 @@ do {
         "18" { Run-Script "$ScriptDir\Tools\Quick-Access-Shortcuts.ps1" "Quick Access" }
         "19" { Run-Script "$ScriptDir\Utils\System-Diagnostics.ps1" "Diagnostics" }
         default { 
-            Write-Host "[ERROR] Invalid option" -ForegroundColor Red
-            Read-Host "Press Enter"
+            Write-Host "[ERROR] Invalid option - please select a valid number (0-19)" -ForegroundColor Red
+            Log-Message "Invalid menu option selected: $choice"
+            Read-Host "Press Enter to try again"
         }
     }
-} while ($true)
+}

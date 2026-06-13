@@ -2,17 +2,9 @@
 REM Windows Gaming Optimization Toolkit - Batch Launcher
 REM This script automatically launches PowerShell and runs the optimization toolkit
 
-REM Check for admin privileges
-net session >nul 2>&1
-if %errorLevel% neq 0 (
-    echo [ERROR] This script requires Administrator privileges!
-    echo Please right-click this file and select "Run as administrator"
-    pause
-    exit /b 1
-)
+setlocal enabledelayedexpansion
 
 REM Get the directory where this batch file is located
-setlocal enabledelayedexpansion
 set "SCRIPT_DIR=%~dp0"
 
 REM Display banner
@@ -41,12 +33,14 @@ echo.
 timeout /t 2 /nobreak
 
 REM Launch PowerShell with the toolkit
-powershell -NoProfile -ExecutionPolicy Bypass -Command "& {Set-Location '%SCRIPT_DIR%'; & '.\Launch-OptimizationToolkit.ps1'}"
+REM Using -WindowStyle Normal to ensure it shows properly
+powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Normal -Command "Set-Location '%SCRIPT_DIR%'; & '.\Launch-OptimizationToolkit.ps1'"
 
 REM Keep window open if there was an error
 if %errorLevel% neq 0 (
     echo.
     echo [ERROR] An error occurred while running the toolkit.
+    echo Press Enter to close this window.
     pause
 )
 
